@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Fiche Personnalisée</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .description {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .data-field {
+            margin-bottom: 10px;
+        }
+        .data-field label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .data-field input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="description">
+        <h3>Fiche d'information</h3>
+        <p><strong>Description :</strong> Cette fiche permet de consulter et modifier les informations.</p>
+        <p><em>Instructions :</em> Vérifiez que toutes les informations sont à jour.</p>
+    </div>
+
+    <div class="data-field">
+        <label for="edit-numero">Numéro :</label>
+        <input type="text" id="edit-numero">
+    </div>
+    <div class="data-field">
+        <label for="edit-prenom">Prénom :</label>
+        <input type="text" id="edit-prenom">
+    </div>
+    <div class="data-field">
+        <label for="edit-nom">Nom :</label>
+        <input type="text" id="edit-nom">
+    </div>
+    <div class="data-field">
+        <label for="edit-autreInfo">Autre info :</label>
+        <input type="text" id="edit-autreInfo">
+    </div>
+
+    <button onclick="saveChanges()">Enregistrer les modifications</button>
+
+    <script>
+        // Attendre que Grist soit prêt et que les données soient disponibles
+        window.addEventListener('message', (event) => {
+            if (event.data?.type === 'GristReady') {
+                // Récupérer la ligne sélectionnée
+                const row = event.data.selectedRow;
+                if (row) {
+                    // Charger les données dans les champs du formulaire
+                    document.getElementById('edit-numero').value = row.Numéro || '';
+                    document.getElementById('edit-prenom').value = row.Prénom || '';
+                    document.getElementById('edit-nom').value = row.Nom || '';
+                    document.getElementById('edit-autreInfo').value = row['Autre info'] || '';
+                }
+            }
+        });
+
+        // Fonction pour enregistrer les modifications dans Grist
+        function saveChanges() {
+            const updatedRow = {
+                Numéro: document.getElementById('edit-numero').value,
+                Prénom: document.getElementById('edit-prenom').value,
+                Nom: document.getElementById('edit-nom').value,
+                'Autre info': document.getElementById('edit-autreInfo').value
+            };
+
+            // Envoyer les modifications à Grist
+            window.parent.postMessage({
+                type: 'updateRecords',
+                tableId: 'Table1', // Remplacez par l'ID de votre table si nécessaire
+                records: [{
+                    id: gristDoc.selectedRowId, // L'ID de la ligne sélectionnée
+                    fields: updatedRow
+                }]
+            }, '*');
+        }
+
+        // Informer Grist que le widget est prêt
+        window.parent.postMessage({ type: 'WidgetReady' }, '*');
+    </script>
+</body>
+</html>
